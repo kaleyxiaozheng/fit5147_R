@@ -61,10 +61,13 @@ server <- function(input, output){
      my_data[ which(my_data$kind == input$select), ]
    })
    
-    output$data1 <- renderPlot({
-    p <- ggplot(newData(), aes(x = year, y = bleaching)) + geom_jitter()
-    q.one <- p + facet_grid(latitude + site ~ kind) +  stat_smooth(method = "lm", se = FALSE, col = "red") 
-    print(q.one)
+   output$data1 <- renderPlot({
+     p <- ggplot(newData(), aes(x = year, y = bleaching)) + geom_jitter() + facet_grid(site + latitude ~ kind)
+   
+   if(input$smoother){
+     p <- p + stat_smooth(method = "lm", se = FALSE, col = "red")
+   }
+     print(p)
   })
 }
 
