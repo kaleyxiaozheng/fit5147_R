@@ -57,13 +57,15 @@ server <- function(input, output){
     paste("Coral of ", input$select)
   })
 
+   newData <- reactive({
+     my_data[ which(my_data$kind == input$select), ]
+   })
+   
     output$data1 <- renderPlot({
-    newData <- my_data[ which(my_data$kind == input$select), ]
-    
-    p <- ggplot(newData, aes(x = year, y = bleaching)) + geom_jitter()
+    p <- ggplot(newData(), aes(x = year, y = bleaching)) + geom_jitter()
     q.one <- p + facet_grid(latitude + site ~ kind) +  stat_smooth(method = "lm", se = FALSE, col = "red") 
     print(q.one)
   })
-
 }
+
 shinyApp(ui = ui, server = server)
