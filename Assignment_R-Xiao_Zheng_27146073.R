@@ -21,10 +21,49 @@ coral
 # Allowing the user to vary the kind of coral display and the choice of smoother
 # Read data from xlsx dataset
 install.packages("readxl")
-library(read)
-my_data = read_excel("/Users/zhengxiao/Documents/TextBooks/2017-S1/FIT5147-Data_exploration_and_visualisation/Assignment/Assignment-03/assignment-02-data.xlsx")
+library(readxl)
+my_data = read_excel("/Users/zhengxiao/Documents/TextBooks/2017-S1/FIT5147-Data_exploration_and_visualisation/Assignment/Assignment_R/assignment-02-data.xlsx")
 
 install.packages("ggplot2")
-library(ggplot)
+library(ggplot2)
 install.packages("shiny")
 library(shiny)
+
+
+ui <-fluidPage(
+  titlePanel("Question 3 - Interactive visualisation"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("select",
+                  label = "Select a type of coral",
+                  choices = list("blue corals", "hard corals", "sea fans", "sea pens", "soft corals"),
+                  selected = "blue corals"),
+      
+      checkboxInput("smoother",
+                    label = strong("smooth the data visualisation"),
+                    value = FALSE)
+    ),
+    
+    mainPanel(
+      textOutput("text"),
+      plotOutput("data1")
+    )
+  )
+)
+
+server <- function(input, output){
+   output$text <- renderText({
+    paste("Coral of ", input$select)
+  })
+
+    output$data1 <- renderPlot({
+    newData <- my_data[ which(my_data$kind == input$select), ]
+    
+    p <- ggplot(newData, aes(x = year, y = bleaching)) + geom_jitter()
+    q.one <- p + facet_grid(latitude + site ~ kind) +  stat_smooth(method = "lm", se = FALSE, col = "red") 
+    print(q.one)
+  })
+
+}
+shinyApp(ui = ui, server = server)
