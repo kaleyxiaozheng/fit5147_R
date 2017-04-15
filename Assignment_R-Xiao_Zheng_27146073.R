@@ -62,7 +62,7 @@ server <- function(input, output){
    })
    
    output$data1 <- renderPlot({
-     p <- ggplot(newData(), aes(x = year, y = bleaching)) + geom_jitter() + facet_grid(site + latitude ~ kind)
+     p <- ggplot(newData(), aes(x = year, y = bleaching)) + geom_jitter() + facet_grid(. ~ site)
    
    if(input$smoother){
      p <- p + stat_smooth(method = "lm", se = FALSE, col = "red")
@@ -77,13 +77,78 @@ shinyApp(ui = ui, server = server)
 # Create a map by using Leaflet that show the location of the sites
 install.packages("leaflet")
 install.packages("readxl")
-library(leaflet)
+
 library(readxl)
 
 data <- read_excel("/Users/zhengxiao/Documents/TextBooks/2017-S1/FIT5147-Data_exploration_and_visualisation/Assignment/Assignment_R/assignment-02-data.xlsx")
 head(data)
 
-leaflet(data = data) %>% addTiles() %>% 
-  addMarkers(~longitude, ~latitude, popup = ~as.character((site)))
+#leaflet() %>% addTiles() %>% addMarkers(data = data, ~longitude, ~latitude, popup = ~as.character((site)))
 
-# Q5
+
+leaflet(data = data) %>% addTiles() %>% addMarkers(~longitude, ~latitude, popup = ~as.character(site), clusterOptions = markerClusterOptions())
+
+
+
+# Q5 Merge the map into the interactive visualisation
+install.packages("readxl")
+library(readxl)
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("shiny")
+library(shiny)
+install.packages("ggmap")
+library(ggmap)
+library(leaflet)
+library(leaflet)
+
+my_data <- read_excel("/Users/zhengxiao/Documents/TextBooks/2017-S1/FIT5147-Data_exploration_and_visualisation/Assignment/Assignment_R/assignment-02-data.xlsx")
+head(my_data)
+
+ui <-fluidPage(
+  titlePanel("Question 3 - Interactive visualisation"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("select",
+                  label = "Select a type of coral",
+                  choices = list("blue corals", "hard corals", "sea fans", "sea pens", "soft corals"),
+                  selected = "blue corals"),
+      
+      checkboxInput("smoother",
+                    label = strong("smooth the data visualisation"),
+                    value = FALSE)
+    ),
+    
+    mainPanel(
+      textOutput("text"),
+      plotOutput("data1"),
+      leafletOutput("map")
+    )
+  )
+)
+
+server <- function(input, output){
+  output$text <- renderText({
+    paste("Coral of ", input$select)
+  })
+  
+  newData <- reactive({
+    my_data[ which(my_data$kind == input$select), ]
+  })
+  
+  output$data1 <- renderPlot({
+    p <- ggplot(newData(), aes(x = year, y = bleaching)) + geom_jitter(aes(col = site)) + facet_grid(. ~ site, scale = "free_y") 
+    
+    if(input$smoother){
+      p <- p + stat_smooth(method = "lm", se = FALSE, alpha = 0.6)
+    }
+    print(p)
+  })
+  
+  output$map <- renderLeaflet(
+    leaflet(data = newData()) %>% addTiles() %>% addMarkers(~longitude, ~latitude, popup = ~as.character(site), clusterOptions = markerClusterOptions())
+  )
+}
+
+shinyApp(ui = ui, server = server)
