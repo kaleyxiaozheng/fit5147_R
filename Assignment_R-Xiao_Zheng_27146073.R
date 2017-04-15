@@ -73,7 +73,7 @@ server <- function(input, output){
 
 shinyApp(ui = ui, server = server)
 
-# Question 4
+# Q4
 # Create a map by using Leaflet that show the location of the sites
 install.packages("leaflet")
 install.packages("readxl")
@@ -86,3 +86,4 @@ head(data)
 leaflet(data = data) %>% addTiles() %>% 
   addMarkers(~longitude, ~latitude, popup = ~as.character((site)))
 
+# Q5
